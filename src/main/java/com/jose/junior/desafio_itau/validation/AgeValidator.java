@@ -1,4 +1,4 @@
-package com.jose.junior.desafio_itau.account.validation;
+package com.jose.junior.desafio_itau.validation;
 
 import com.jose.junior.desafio_itau.account.exception.BloquedException;
 import jakarta.validation.ConstraintValidator;

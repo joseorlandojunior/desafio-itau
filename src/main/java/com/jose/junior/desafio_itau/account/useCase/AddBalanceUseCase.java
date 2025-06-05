@@ -1,0 +1,32 @@
+package com.jose.junior.desafio_itau.account.useCase;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+public interface AddBalanceUseCase {
+
+    void execute(AddBalanceCommand cmd);
+
+    @Builder
+    @Getter
+    @JsonIgnoreProperties(value = {"accountOwner"})
+    class AddBalanceCommand {
+        private final Long accountId;
+        private final BigDecimal valueForAdd;
+        private final String documentAccountOwner;
+        private final LocalDateTime time;
+
+        public AddBalanceCommand withOwner(String accountOwner) {
+            return AddBalanceCommand.builder()
+                    .accountId(accountId)
+                    .valueForAdd(valueForAdd)
+                    .documentAccountOwner(accountOwner)
+                    .time(time)
+                    .build();
+        }
+    }
+}

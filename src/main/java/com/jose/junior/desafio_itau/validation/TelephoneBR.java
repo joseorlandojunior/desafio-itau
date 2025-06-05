@@ -1,4 +1,4 @@
-package com.jose.junior.desafio_itau.account.validation;
+package com.jose.junior.desafio_itau.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -8,12 +8,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy = AgeValidator.class)
+@Constraint(validatedBy = TelephoneValidator.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
-public @interface AgeValid {
-
-    String message() default "invalidated age";
+public @interface TelephoneBR {
+    String message() default "invalidated Telephone";
 
     Class<?>[] groups() default{};
 

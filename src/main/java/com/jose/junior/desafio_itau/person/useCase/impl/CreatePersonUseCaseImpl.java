@@ -1,23 +1,20 @@
-package com.jose.junior.desafio_itau.person.service;
+package com.jose.junior.desafio_itau.person.useCase.impl;
 
-import com.jose.junior.desafio_itau.person.CreatePersonUseCase;
 import com.jose.junior.desafio_itau.person.model.domain.Person;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class CreatePersonService implements CreatePersonUseCase {
+public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
 
     private final PersonService service;
 
     @Override
     public void execute(CreatePersonCommand cmd) {
-        var managerIsActive = service.existsByDocumentAndActive(cmd.getManagerDocument(), true);
-
-        if (managerIsActive) {
-            service.save(buildPerson(cmd));
-        }
+        service.verifyIfManagerIsAuthorized(cmd.getManagerDocument());
+        service.save(buildPerson(cmd));
     }
 
     private Person buildPerson(CreatePersonCommand cmd) {
@@ -26,7 +23,7 @@ public class CreatePersonService implements CreatePersonUseCase {
                 .email(cmd.getEmail())
                 .birthDate(cmd.getBirthDate())
                 .document(cmd.getDocument())
-                .manageAccounts(false)
+                .manageAccounts(cmd.getManageAccounts())
                 .fullname(cmd.getFullName())
                 .telephone(cmd.getTelephone())
                 .build();
