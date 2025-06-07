@@ -2,29 +2,24 @@ package com.jose.junior.desafio_itau.account.model.domain;
 
 import com.jose.junior.desafio_itau.account.model.database.AccountDatabase;
 import com.jose.junior.desafio_itau.person.model.domain.Person;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.math.BigDecimal;
 
 @Getter
 @Setter
 @Builder
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class Account {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private BigDecimal balance;
 
-    private final Person client;
+    private Person client;
 
     private Boolean active;
 
@@ -40,11 +35,16 @@ public class Account {
         this.balance = balance.add(balanceForAdd);
     }
 
-    public AccountDatabase toDatabase() {
+    public void debitBalance(BigDecimal balanceForDebit) {
+        this.balance = balance.subtract(balanceForDebit);
+    }
+
+    public AccountDatabase toDatabase(boolean includePerson) {
         return AccountDatabase.builder()
+                .id(id)
                 .balance(balance)
                 .active(active)
-                .client(client.toDatabase())
+                .client(includePerson && client != null ? client.toDatabase(false) : null)
                 .build();
     }
 }

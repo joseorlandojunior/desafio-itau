@@ -1,68 +1,64 @@
 package com.jose.junior.desafio_itau.person.model.domain;
 
 import com.jose.junior.desafio_itau.account.model.domain.Account;
-import com.jose.junior.desafio_itau.validation.TelephoneBR;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
+import com.jose.junior.desafio_itau.validation.TelephoneBR;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.time.LocalDate;
 
 @Getter
 @Setter
 @Builder
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class Person {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private final Long id;
+    private Long id;
 
     @NotEmpty(message = "Name cannot be null")
-    private final String fullname;
+    private String fullname;
 
-    @NotEmpty(message = "Birth date cannot be null")
-    private final LocalDate birthDate;
+    @NotNull(message = "Birth date cannot be null")
+    private LocalDate birthDate;
 
     @NotEmpty(message = "CPF cannot be null")
     @CPF
-    private final String document;
+    private String document;
 
     @Email
-    private final String email;
+    private String email;
 
     @TelephoneBR
-    private final String telephone;
+    private String telephone;
 
     private Boolean active;
 
     private Boolean manageAccounts;
 
-    private final Account account;
+    private Account account;
 
-    public void disable(){
+    public void disable() {
         this.active = false;
     }
 
-    public void enable(){
+    public void enable() {
         this.active = true;
     }
 
-    public PersonDatabase toDatabase(){
+    public PersonDatabase toDatabase(boolean includeAccount) {
         return PersonDatabase.builder()
                 .id(id)
                 .manageAccounts(manageAccounts)
                 .document(document)
                 .birthDate(birthDate)
-                .account(account)
+                .account(includeAccount && account != null ? account.toDatabase(false) : null)
                 .fullname(fullname)
                 .email(email)
                 .telephone(telephone)

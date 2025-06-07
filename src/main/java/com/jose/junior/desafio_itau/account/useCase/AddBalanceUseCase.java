@@ -1,6 +1,7 @@
 package com.jose.junior.desafio_itau.account.useCase;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,8 +14,10 @@ public interface AddBalanceUseCase {
 
     @Builder
     @Getter
-    @JsonIgnoreProperties(value = {"accountOwner"})
+    @JsonIgnoreProperties(value = {"documentAccountOwner"})
     class AddBalanceCommand {
+
+        @NotNull(message = "Account id must not be null.")
         private final Long accountId;
         private final BigDecimal valueForAdd;
         private final String documentAccountOwner;

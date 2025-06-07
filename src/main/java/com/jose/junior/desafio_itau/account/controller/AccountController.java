@@ -47,8 +47,10 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/debit-balance/{id}")
-    public ResponseEntity<Void> debitBalance() {
+    @PutMapping(path = "/debit-balance/{accountOwner}")
+    public ResponseEntity<Void> debitBalance(@PathVariable String accountOwner,
+                                             @RequestBody DebitBalanceUseCase.DebitBalanceCommand debitBalanceCommand) {
+        debitBalance.execute(debitBalanceCommand.withOwner(accountOwner));
         return ResponseEntity.ok().build();
     }
 }
