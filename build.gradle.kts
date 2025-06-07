@@ -25,8 +25,7 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.hibernate:hibernate-core:7.0.0.Final")
-	implementation("org.hibernate:hibernate-entitymanager:5.3.37.Final")
+	implementation("org.postgresql:postgresql:42.7.2")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation ("org.springframework.boot:spring-boot-starter-validation")
 	compileOnly("org.projectlombok:lombok")

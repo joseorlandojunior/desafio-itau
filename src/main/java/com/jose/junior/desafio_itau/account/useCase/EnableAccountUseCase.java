@@ -1,0 +1,25 @@
+package com.jose.junior.desafio_itau.account.useCase;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
+import lombok.Getter;
+
+public interface EnableAccountUseCase {
+
+    void execute(EnableAccountCommand cmd);
+
+    @Builder
+    @Getter
+    @JsonIgnoreProperties(value = {"managerDocument"})
+    class EnableAccountCommand{
+        private final String managerDocument;
+        private final Long accountId;
+
+        public EnableAccountCommand withManagerDocument(String managerDocument) {
+            return EnableAccountCommand.builder()
+                    .managerDocument(managerDocument)
+                    .accountId(accountId)
+                    .build();
+        }
+    }
+}

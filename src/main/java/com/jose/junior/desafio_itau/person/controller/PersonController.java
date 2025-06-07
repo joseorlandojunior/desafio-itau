@@ -1,42 +1,47 @@
 package com.jose.junior.desafio_itau.person.controller;
 
-import com.jose.junior.desafio_itau.person.CreatePersonUseCase;
-import com.jose.junior.desafio_itau.person.CreatePersonUseCase.CreatePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase.CreatePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.DisablePersonUseCase;
+import com.jose.junior.desafio_itau.person.useCase.DisablePersonUseCase.DisablePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.EnablePersonUseCase;
+import com.jose.junior.desafio_itau.person.useCase.EnablePersonUseCase.EnablePersonCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.jose.junior.desafio_itau.person.controller.PersonController.*;
+import static com.jose.junior.desafio_itau.person.controller.PersonController.PATH;
 
-@SuppressWarnings("ALL")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonController {
 
-    public static final String PATH = "/person/{gerenteDocument}";
+    public static final String PATH = "/person/{managerDocument}";
 
     private final CreatePersonUseCase createPerson;
+    private final EnablePersonUseCase enablePerson;
+    private final DisablePersonUseCase disablePersonUseCase;
 
-    @PostMapping()
-    public String postPerson(@RequestBody CreatePersonCommand cmd,
-                           @PathVariable String gerenteDocument) {
-        createPerson.execute(cmd);
+    @PostMapping
+    public ResponseEntity<Void> postPerson(@RequestBody CreatePersonCommand cmd,
+                                           @PathVariable String managerDocument) {
+        createPerson.execute(cmd.withManageDocument(managerDocument));
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/manager")
-    public void postManager(@RequestBody CreatePersonCommand cmd) {
-        createPerson.execute(cmd);
+    @PutMapping(path = "/enable")
+    public ResponseEntity<Void> enablePerson(@RequestBody EnablePersonCommand cmd,
+                                             @PathVariable String managerDocument) {
+        enablePerson.execute(cmd.withManagerDocument(managerDocument));
+        return ResponseEntity.ok().build();
     }
 
-
-    @PutMapping("/enable")
-    public void enablePerson(@RequestBody CreatePersonCommand cmd) {
-        createPerson.execute(cmd);
-    }
-
-    @PutMapping("/disable")
-    public void disablePerson(@RequestBody CreatePersonCommand cmd) {
-        createPerson.execute(cmd);
+    @PutMapping(path = "/disable")
+    public ResponseEntity<Void> disablePerson(@RequestBody DisablePersonCommand cmd,
+                                              @PathVariable String managerDocument) {
+        disablePersonUseCase.execute(cmd.withManagerDocument(managerDocument));
+        return ResponseEntity.ok().build();
     }
 }
