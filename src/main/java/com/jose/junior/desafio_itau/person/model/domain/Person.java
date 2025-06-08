@@ -59,7 +59,7 @@ public class Person {
                 .document(document)
                 .birthDate(birthDate)
                 .account(includeAccount && account != null ? account.toDatabase(false) : null)
-                .fullname(fullname)
+                .fullName(fullname)
                 .email(email)
                 .telephone(telephone)
                 .active(active)

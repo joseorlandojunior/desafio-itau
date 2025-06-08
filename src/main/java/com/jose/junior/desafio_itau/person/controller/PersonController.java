@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
 import static com.jose.junior.desafio_itau.person.controller.PersonController.PATH;
 
 @RestController
@@ -28,7 +30,7 @@ public class PersonController {
     public ResponseEntity<Void> postPerson(@RequestBody CreatePersonCommand cmd,
                                            @PathVariable String managerDocument) {
         createPerson.execute(cmd.withManageDocument(managerDocument));
-        return ResponseEntity.ok().build();
+        return ResponseEntity.created((URI.create("/person" + cmd.getDocument()))).build();
     }
 
     @PutMapping(path = "/enable")
