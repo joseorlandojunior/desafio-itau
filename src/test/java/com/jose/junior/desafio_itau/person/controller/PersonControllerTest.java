@@ -1,30 +1,29 @@
 package com.jose.junior.desafio_itau.person.controller;
 
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jose.junior.desafio_itau.person.gateway.database.PersonRepository;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
-import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase.CreatePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 
-import static com.jose.junior.desafio_itau.TestUtils.objectToJson;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc
 @SpringBootTest
-@ExtendWith({SpringExtension.class})
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 class PersonControllerTest {
+
+    @Autowired
+    ObjectMapper mapper;
 
     @Autowired
     private MockMvc mvc;
@@ -32,7 +31,7 @@ class PersonControllerTest {
     @Autowired
     PersonRepository personRepository;
 
-    private static final String PERSON_ENDPOINT = "/desafio-itau/person";
+    private static final String PERSON_ENDPOINT = PersonController.PATH;
 
     @Test
     public void shouldCreatePersonWithSuccess() throws Exception {
@@ -48,7 +47,7 @@ class PersonControllerTest {
         personRepository.save(manager);
 
 
-        var cmd = CreatePersonCommand.builder()
+        var cmd = CreatePersonUseCase.CreatePersonCommand.builder()
                 .birthDate(LocalDate.of(1997, 8, 8))
                 .document("44162468702")
                 .email("teste@teste2.com")
@@ -57,9 +56,9 @@ class PersonControllerTest {
                 .telephone("123345567")
                 .build();
 
-        mvc.perform(post(PERSON_ENDPOINT, manager.getDocument())
+        this.mvc.perform(post(PERSON_ENDPOINT, "66721724243")
                         .contentType(APPLICATION_JSON)
-                        .content(objectToJson(cmd)))
+                        .content(mapper.writeValueAsString(cmd)))
                 .andExpect(status().isCreated());
 
         var result = personRepository.getByDocument(cmd.getDocument());
