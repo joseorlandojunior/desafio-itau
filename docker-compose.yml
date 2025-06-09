@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:17
@@ -14,8 +12,50 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+        - elk-net
 
-  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    networks:
+      - elk-net
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.9.2
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5000:5000"
+    networks:
+      - elk-net
+    depends_on:
+      - elasticsearch
+
+  kibana:
+
+    image: docker.elastic.co/kibana/kibana:8.9.2
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - elk-net
+    depends_on:
+      - elasticsearch
+
   app:
     build:
       context: .
@@ -26,7 +66,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      elasticsearch:
+        condition: service_started
+      logstash:
+        condition: service_started
+    networks:
+        - elk-net
 
+networks:
+  elk-net:
+    driver: bridge
 
 volumes:
   pgdata:
