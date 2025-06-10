@@ -1,5 +1,6 @@
 package com.jose.junior.desafio_itau.person.useCase.impl;
 
+import com.jose.junior.desafio_itau.person.exception.PersonAlreadyExistsException;
 import com.jose.junior.desafio_itau.person.model.domain.Person;
 import com.jose.junior.desafio_itau.person.useCase.CreateFirstManagerUseCase;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,10 @@ public class CreateFirstManagerUSeCaseImpl implements CreateFirstManagerUseCase 
         var transactionInfoLog = String.format("CreateFirstManagerUSeCaseImpl_" + cmd.getDocument());
 
         log.info("{} Payload received is {}", transactionInfoLog, cmd);
+
+        if (service.existsByDocument(cmd.getDocument())) {
+            throw new PersonAlreadyExistsException(String.format("Person with document %s already exists.", cmd.getDocument()));
+        }
 
         var person = buildPerson(cmd);
         service.save(person, false);
