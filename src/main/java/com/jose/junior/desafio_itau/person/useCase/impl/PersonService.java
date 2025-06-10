@@ -19,6 +19,10 @@ public class PersonService {
         return repository.existsByDocumentAndActiveAndManageAccounts(document, active, true);
     }
 
+    public Boolean existsByDocument(String document) {
+        return repository.existsByDocument(document);
+    }
+
     public void save(Person person, Boolean includeAccount) {
         repository.save(person.toDatabase(includeAccount));
     }
