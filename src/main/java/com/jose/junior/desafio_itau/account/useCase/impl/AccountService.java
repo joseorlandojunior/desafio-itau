@@ -2,6 +2,7 @@ package com.jose.junior.desafio_itau.account.useCase.impl;
 
 import com.jose.junior.desafio_itau.account.exception.AccountNotFoundException;
 import com.jose.junior.desafio_itau.account.gateway.database.AccountRepository;
+import com.jose.junior.desafio_itau.account.model.database.AccountDatabase;
 import com.jose.junior.desafio_itau.account.model.domain.Account;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,8 @@ public class AccountService {
 
     private final AccountRepository repository;
 
-    public void saveAccount(Account account, Boolean includePerson) {
-        repository.save(account.toDatabase(includePerson));
+    public AccountDatabase saveAccount(Account account, Boolean includePerson) {
+        return repository.save(account.toDatabase(includePerson));
     }
 
     public Account getAccount(Long accountId) {

@@ -23,7 +23,7 @@ public class PersonDatabase {
     Long id;
 
     @Column
-    String fullname;
+    String fullName;
 
     @Column
     LocalDate birthDate;
@@ -54,7 +54,7 @@ public class PersonDatabase {
                 .telephone(telephone)
                 .active(active)
                 .manageAccounts(manageAccounts)
-                .fullname(fullname)
+                .fullname(fullName)
                 .birthDate(birthDate)
                 .account(includeAccount && account != null ? account.toDomain(false) : null)
                 .build();

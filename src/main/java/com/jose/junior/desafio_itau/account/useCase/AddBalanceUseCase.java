@@ -19,6 +19,8 @@ public interface AddBalanceUseCase {
 
         @NotNull(message = "Account id must not be null.")
         private final Long accountId;
+
+        @NotNull(message = "Value for add id must not be null.")
         private final BigDecimal valueForAdd;
         private final String documentAccountOwner;
         private final LocalDateTime time;

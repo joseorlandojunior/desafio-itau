@@ -9,13 +9,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 public class Person {
@@ -59,7 +57,7 @@ public class Person {
                 .document(document)
                 .birthDate(birthDate)
                 .account(includeAccount && account != null ? account.toDatabase(false) : null)
-                .fullname(fullname)
+                .fullName(fullname)
                 .email(email)
                 .telephone(telephone)
                 .active(active)

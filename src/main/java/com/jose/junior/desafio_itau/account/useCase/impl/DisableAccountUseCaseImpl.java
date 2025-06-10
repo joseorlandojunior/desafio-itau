@@ -28,7 +28,7 @@ public class DisableAccountUseCaseImpl implements DisableAccountUseCase {
 
         var account = accountService.getAccount(cmd.getAccountId());
         disableAccount(account);
-        accountService.saveAccount(account, false);
+        accountService.saveAccount(account, true);
         log.info("{} Account  has been disabled {}", transactionInfoLog, account);
     }
 

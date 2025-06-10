@@ -19,7 +19,7 @@ public class CreateAccountUseCaseImpl implements CreateAccountUseCase {
     private final AccountService accountService;
 
     @Override
-    public void execute(CreateAccountCommand cmd) {
+    public Long execute(CreateAccountCommand cmd) {
         var transactionInfoLog = String.format("CreateAccountUseCaseImpl_" + cmd.getPersonDocument());
 
         log.info("{} Payload received is {}", transactionInfoLog, cmd);
@@ -30,7 +30,7 @@ public class CreateAccountUseCaseImpl implements CreateAccountUseCase {
         var account = buildAccount(person);
 
         log.info("{} Account created is {}",transactionInfoLog, account);
-        accountService.saveAccount(account, true);
+        return accountService.saveAccount(account, true).getId();
     }
 
     private Account buildAccount(Person person) {

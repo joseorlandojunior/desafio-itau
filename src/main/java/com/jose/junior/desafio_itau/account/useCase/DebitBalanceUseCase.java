@@ -19,6 +19,8 @@ public interface DebitBalanceUseCase {
 
         @NotNull(message = "Account id must not be null.")
         Long accountId;
+
+        @NotNull(message = "value for debit must not be null.")
         BigDecimal valueForDebit;
         String documentAccountOwner;
         LocalDateTime time;
