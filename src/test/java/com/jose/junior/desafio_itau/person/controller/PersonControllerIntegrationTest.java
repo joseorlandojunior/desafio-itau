@@ -1,12 +1,17 @@
 package com.jose.junior.desafio_itau.person.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jose.junior.desafio_itau.person.exception.ManagerNotAuthorizedException;
 import com.jose.junior.desafio_itau.person.gateway.database.PersonRepository;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase;
 import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase.CreatePersonCommand;
 import com.jose.junior.desafio_itau.person.useCase.DisablePersonUseCase.DisablePersonCommand;
 import com.jose.junior.desafio_itau.person.useCase.EnablePersonUseCase.EnablePersonCommand;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -26,13 +32,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestInstance(PER_CLASS)
 @ActiveProfiles("test")
-class PersonControllerTest {
+class PersonControllerIntegrationTest {
 
     @Autowired
     ObjectMapper mapper;
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private CreatePersonUseCase createPersonUseCase;
 
     @Autowired
     PersonRepository personRepository;
@@ -52,13 +61,12 @@ class PersonControllerTest {
                 .birthDate(LocalDate.of(1990, 2, 3))
                 .document("66721724243")
                 .email("teste@teste.com")
-                .fullName("José Orlando Junior")
+                .fullName("Alisson Santos")
                 .manageAccounts(true)
                 .active(true)
                 .telephone("123345567")
                 .build();
         personRepository.save(manager);
-
 
         var cmd = CreatePersonCommand.builder()
                 .birthDate(LocalDate.of(1997, 8, 8))
@@ -95,7 +103,7 @@ class PersonControllerTest {
                 .birthDate(LocalDate.of(1990, 2, 3))
                 .document("66721724243")
                 .email("teste@teste.com")
-                .fullName("José Orlando Junior")
+                .fullName("Alisson Santos")
                 .manageAccounts(true)
                 .active(true)
                 .telephone("123345567")
@@ -145,7 +153,7 @@ class PersonControllerTest {
                 .birthDate(LocalDate.of(1990, 2, 3))
                 .document("66721724243")
                 .email("teste@teste.com")
-                .fullName("José Orlando Junior")
+                .fullName("Alisson Santos")
                 .manageAccounts(true)
                 .active(true)
                 .telephone("123345567")
@@ -186,6 +194,35 @@ class PersonControllerTest {
                 () -> assertEquals(result.getEmail(), personDatabase.getEmail())
         );
     }
-}
 
-//deve garantir que ao tentar cadastrar uma pessoa com gerente invalido, o http status é 422
+    @Test
+    @DisplayName("Ensure that when trying to register a person using an invalid manager document, the return will be unprocessable entity")
+    public void shouldReturnHttpStatus422WhenManagerIsInvalidForCreatePerson() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("Alisson Santos")
+                .manageAccounts(false)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var cmd = CreatePersonCommand.builder()
+                .birthDate(LocalDate.of(1997, 8, 8))
+                .document("44162468702")
+                .email("teste@teste2.com")
+                .fullName("João da Silva")
+                .manageAccounts(false)
+                .telephone("123345567")
+                .build();
+
+        mvc.perform(post(PERSON_ENDPOINT, manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(result -> assertThatThrownBy(() -> createPersonUseCase.execute(cmd)).isInstanceOf(ManagerNotAuthorizedException.class));
+    }
+}

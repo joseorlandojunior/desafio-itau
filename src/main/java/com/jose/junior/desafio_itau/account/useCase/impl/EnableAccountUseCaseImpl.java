@@ -28,7 +28,7 @@ public class EnableAccountUseCaseImpl implements EnableAccountUseCase {
 
         account.enable();
 
-        accountService.saveAccount(account, false);
+        accountService.saveAccount(account, true);
         log.info("{} Account {} has been enabled", transactionInfoLog, cmd.getAccountId());
     }
 }

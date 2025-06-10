@@ -3,15 +3,24 @@ package com.jose.junior.desafio_itau.account.controller;
 import com.jose.junior.desafio_itau.account.useCase.*;
 import com.jose.junior.desafio_itau.account.useCase.AddBalanceUseCase.AddBalanceCommand;
 import com.jose.junior.desafio_itau.account.useCase.CreateAccountUseCase.CreateAccountCommand;
+import com.jose.junior.desafio_itau.account.useCase.DebitBalanceUseCase.DebitBalanceCommand;
 import com.jose.junior.desafio_itau.account.useCase.EnableAccountUseCase.EnableAccountCommand;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
+import static com.jose.junior.desafio_itau.account.controller.AccountController.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/accounts")
+@RequestMapping(path = PATH, produces = APPLICATION_JSON_VALUE)
 public class AccountController {
+
+    public static final String PATH = "/accounts";
 
     private final CreateAccountUseCase createAccount;
     private final EnableAccountUseCase enableAccount;
@@ -19,37 +28,37 @@ public class AccountController {
     private final AddBalanceUseCase addBalance;
     private final DebitBalanceUseCase debitBalance;
 
-    @PostMapping(path = "/{managerAccount}")
-    public ResponseEntity<Void> openAccount(@PathVariable String managerAccount,
-                                            @RequestBody CreateAccountCommand createAccountCommand) {
-        createAccount.execute(createAccountCommand.withManagerDocument(managerAccount));
+    @PostMapping("/{managerDocument}")
+    public ResponseEntity<Void> openAccount(@PathVariable String managerDocument,
+                                            @RequestBody @Valid CreateAccountCommand createAccountCommand) {
+        var accountId = createAccount.execute(createAccountCommand.withManagerDocument(managerDocument));
+        return ResponseEntity.created(URI.create(String.format("/account/%s", accountId.toString()))).build();
+    }
+
+    @PutMapping("/enable/{managerDocument}")
+    public ResponseEntity<Void> enableAccount(@PathVariable String managerDocument,
+                                              @RequestBody @Valid EnableAccountCommand enableAccountCommand) {
+        enableAccount.execute(enableAccountCommand.withManagerDocument(managerDocument));
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/enable/{managerAccount}")
-    public ResponseEntity<Void> enableAccount(@PathVariable String managerAccount,
-                                              @RequestBody EnableAccountCommand enableAccountCommand) {
-        enableAccount.execute(enableAccountCommand.withManagerDocument(managerAccount));
+    @PutMapping("/disable/{managerDocument}")
+    public ResponseEntity<Void> disableAccount(@PathVariable String managerDocument,
+                                               @RequestBody @Valid DisableAccountUseCase.DisableAccountCommand disableAccountCommand) {
+        disableAccount.execute(disableAccountCommand.withManagerDocument(managerDocument));
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/disable/{managerAccount}")
-    public ResponseEntity<Void> disableAccount(@PathVariable String managerAccount,
-                                               @RequestBody DisableAccountUseCase.DisableAccountCommand disableAccountCommand) {
-        disableAccount.execute(disableAccountCommand.withManagerDocument(managerAccount));
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping(path = "/add-balance/{accountOwner}")
+    @PutMapping("/add-balance/{accountOwner}")
     public ResponseEntity<Void> creditBalance(@PathVariable String accountOwner,
-                                              @RequestBody AddBalanceCommand addBalanceCommand) {
+                                              @RequestBody @Valid AddBalanceCommand addBalanceCommand) {
         addBalance.execute(addBalanceCommand.withOwner(accountOwner));
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/debit-balance/{accountOwner}")
+    @PutMapping("/debit-balance/{accountOwner}")
     public ResponseEntity<Void> debitBalance(@PathVariable String accountOwner,
-                                             @RequestBody DebitBalanceUseCase.DebitBalanceCommand debitBalanceCommand) {
+                                             @RequestBody @Valid DebitBalanceCommand debitBalanceCommand) {
         debitBalance.execute(debitBalanceCommand.withOwner(accountOwner));
         return ResponseEntity.ok().build();
     }

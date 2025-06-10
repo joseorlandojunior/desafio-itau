@@ -5,12 +5,10 @@ import com.jose.junior.desafio_itau.person.model.domain.Person;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 public class Account {
