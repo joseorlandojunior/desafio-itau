@@ -3,8 +3,10 @@ package com.jose.junior.desafio_itau.person.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jose.junior.desafio_itau.person.gateway.database.PersonRepository;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
-import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase;
-import org.junit.jupiter.api.Test;
+import com.jose.junior.desafio_itau.person.useCase.CreatePersonUseCase.CreatePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.DisablePersonUseCase.DisablePersonCommand;
+import com.jose.junior.desafio_itau.person.useCase.EnablePersonUseCase.EnablePersonCommand;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,12 +15,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestInstance(PER_CLASS)
 @ActiveProfiles("test")
 class PersonControllerTest {
 
@@ -33,7 +39,13 @@ class PersonControllerTest {
 
     private static final String PERSON_ENDPOINT = PersonController.PATH;
 
+    @BeforeEach
+    public void beforeAll() {
+        personRepository.deleteAll();
+    }
+
     @Test
+    @DisplayName("Ensures that a person has been registered successfully and with correct data")
     public void shouldCreatePersonWithSuccess() throws Exception {
 
         var manager = PersonDatabase.builder()
@@ -42,12 +54,13 @@ class PersonControllerTest {
                 .email("teste@teste.com")
                 .fullName("José Orlando Junior")
                 .manageAccounts(true)
+                .active(true)
                 .telephone("123345567")
                 .build();
         personRepository.save(manager);
 
 
-        var cmd = CreatePersonUseCase.CreatePersonCommand.builder()
+        var cmd = CreatePersonCommand.builder()
                 .birthDate(LocalDate.of(1997, 8, 8))
                 .document("44162468702")
                 .email("teste@teste2.com")
@@ -56,13 +69,123 @@ class PersonControllerTest {
                 .telephone("123345567")
                 .build();
 
-        this.mvc.perform(post(PERSON_ENDPOINT, "66721724243")
+        mvc.perform(post(PERSON_ENDPOINT, manager.getDocument())
                         .contentType(APPLICATION_JSON)
                         .content(mapper.writeValueAsString(cmd)))
                 .andExpect(status().isCreated());
 
-        var result = personRepository.getByDocument(cmd.getDocument());
+        var result = personRepository.getByDocument(cmd.getDocument()).get().toDomain(false);
 
-        //asserts
+        assertAll("ensuring that the person was successfully registered",
+                () -> assertEquals(result.getDocument(), cmd.getDocument()),
+                () -> assertEquals(result.getEmail(), cmd.getEmail()),
+                () -> assertEquals(result.getFullname(), cmd.getFullName()),
+                () -> assertEquals(result.getBirthDate(), cmd.getBirthDate()),
+                () -> assertEquals(result.getTelephone(), cmd.getTelephone()),
+                () -> assertTrue(result.getActive()),
+                () -> assertFalse(result.getManageAccounts())
+        );
+    }
+
+    @Test
+    @DisplayName("Ensures that a person has had their registration successfully enabled")
+    public void shoudlEnablePersonWithSuccess() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("José Orlando Junior")
+                .manageAccounts(true)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(false)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+
+        var cmd = EnablePersonCommand.builder()
+                .personDocument(personDatabase.getDocument())
+                .build();
+
+        mvc.perform(put(PERSON_ENDPOINT.concat("/enable"), manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isOk());
+
+        var result = personRepository.getByDocument(cmd.getPersonDocument()).get().toDomain(false);
+
+        assertTrue(result.getActive());
+
+        assertAll("Ensures that no further information has been modified",
+                () -> assertEquals(result.getBirthDate(), personDatabase.getBirthDate()),
+                () -> assertEquals(result.getTelephone(), personDatabase.getTelephone()),
+                () -> assertFalse(result.getManageAccounts()),
+                () -> assertEquals(result.getDocument(), personDatabase.getDocument()),
+                () -> assertEquals(result.getFullname(), personDatabase.getFullName()),
+                () -> assertEquals(result.getEmail(), personDatabase.getEmail())
+        );
+    }
+
+    @Test
+    @DisplayName("Ensures that a person has had their registration successfully disabled")
+    public void shoudlDisablePersonWithSuccess() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("José Orlando Junior")
+                .manageAccounts(true)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+
+        var cmd = DisablePersonCommand.builder()
+                .personDocument(personDatabase.getDocument())
+                .build();
+
+        mvc.perform(put(PERSON_ENDPOINT.concat("/disable"), manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isOk());
+
+        var result = personRepository.getByDocument(cmd.getPersonDocument()).get().toDomain(false);
+
+        assertFalse(result.getActive());
+
+        assertAll("Ensures that no further information has been modified",
+                () -> assertEquals(result.getBirthDate(), personDatabase.getBirthDate()),
+                () -> assertEquals(result.getTelephone(), personDatabase.getTelephone()),
+                () -> assertFalse(result.getManageAccounts()),
+                () -> assertEquals(result.getDocument(), personDatabase.getDocument()),
+                () -> assertEquals(result.getFullname(), personDatabase.getFullName()),
+                () -> assertEquals(result.getEmail(), personDatabase.getEmail())
+        );
     }
 }
+
+//deve garantir que ao tentar cadastrar uma pessoa com gerente invalido, o http status é 422
