@@ -35,6 +35,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
 	testImplementation("com.h2database:h2:2.3.232")
+	implementation ("org.flywaydb:flyway-core:9.20.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
