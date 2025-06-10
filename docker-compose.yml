@@ -61,8 +61,6 @@ services:
       context: .
     env_file: ./env/app.env
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -72,6 +70,18 @@ services:
         condition: service_started
     networks:
         - elk-net
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - elk-net
 
 networks:
   elk-net:

@@ -12,4 +12,6 @@ public interface PersonRepository extends JpaRepository<PersonDatabase, Integer>
     Boolean existsByDocumentAndActiveAndManageAccounts(String document, Boolean active, Boolean manageAccounts);
 
     Optional<PersonDatabase> getByDocument(String document);
+
+    Boolean existsByDocument(String document);
 }
