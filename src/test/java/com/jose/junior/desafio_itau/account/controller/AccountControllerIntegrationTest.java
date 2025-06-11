@@ -313,11 +313,11 @@ public class AccountControllerIntegrationTest {
         personRepository.save(personDatabase);
 
         var account = AccountDatabase.builder()
-                .balance(BigDecimal.ZERO)
+                .balance(BigDecimal.valueOf(2503.97))
                 .active(true)
                 .client(personDatabase)
                 .build();
-        accountRepository.save(account);
+        var accountId = accountRepository.save(account).getId();
 
         var resultData = mvc.perform(get(ACCOUNT_ENDPOINT.concat("/{accountOwner}"), personDatabase.getDocument()))
                 .andExpect(status().isOk())
@@ -328,7 +328,10 @@ public class AccountControllerIntegrationTest {
         var accountDtoResponse = mapper.readValue(resultData, AccountDTO.class);
 
         assertAll("teste",
-                () -> assertEquals(accountDtoResponse.getDocumentOwner(), personDatabase.getDocument())
+                () -> assertEquals(accountDtoResponse.getDocumentOwner(), personDatabase.getDocument()),
+                () -> assertEquals(accountDtoResponse.getId(), accountId),
+                () -> assertEquals(accountDtoResponse.getBalance(), BigDecimal.valueOf(2503.97)),
+                () -> assertTrue(accountDtoResponse.getActive())
         );
     }
 }

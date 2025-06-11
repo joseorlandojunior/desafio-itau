@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:17
@@ -6,18 +8,16 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
     networks:
-        - desafio-itau-net
+      - desafio-itau-net
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.2
-    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
@@ -33,43 +33,38 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.9.2
-    container_name: logstash
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     ports:
       - "5000:5000"
     networks:
       - desafio-itau-net
-    depends_on:
-      - elasticsearch
 
   kibana:
-
     image: docker.elastic.co/kibana/kibana:8.9.2
-    container_name: kibana
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     ports:
       - "5601:5601"
     networks:
       - desafio-itau-net
-    depends_on:
-      - elasticsearch
 
   app:
-    build:
-      context: .
+    image: jjosejunior/desafio-itau:latest
     env_file: ./env/app.env
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_started
-      logstash:
-        condition: service_started
     networks:
-        - desafio-itau-net
+      - desafio-itau-net
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   nginx:
     image: nginx:stable-alpine
@@ -77,15 +72,16 @@ services:
       - "8080:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d
-    restart: unless-stopped
-    depends_on:
-      - app
     networks:
       - desafio-itau-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 networks:
   desafio-itau-net:
-    driver: bridge
+    driver: overlay
 
 volumes:
   pgdata:
