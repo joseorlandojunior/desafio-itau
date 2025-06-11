@@ -13,7 +13,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-        - elk-net
+        - desafio-itau-net
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.2
@@ -29,7 +29,7 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - elk-net
+      - desafio-itau-net
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.9.2
@@ -39,7 +39,7 @@ services:
     ports:
       - "5000:5000"
     networks:
-      - elk-net
+      - desafio-itau-net
     depends_on:
       - elasticsearch
 
@@ -52,7 +52,7 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - elk-net
+      - desafio-itau-net
     depends_on:
       - elasticsearch
 
@@ -69,7 +69,7 @@ services:
       logstash:
         condition: service_started
     networks:
-        - elk-net
+        - desafio-itau-net
 
   nginx:
     image: nginx:stable-alpine
@@ -81,10 +81,10 @@ services:
     depends_on:
       - app
     networks:
-      - elk-net
+      - desafio-itau-net
 
 networks:
-  elk-net:
+  desafio-itau-net:
     driver: bridge
 
 volumes:
