@@ -5,7 +5,6 @@ import com.jose.junior.desafio_itau.account.useCase.CreateAccountUseCase;
 import com.jose.junior.desafio_itau.person.model.domain.Person;
 import com.jose.junior.desafio_itau.person.useCase.impl.PersonService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ public class CreateAccountUseCaseImpl implements CreateAccountUseCase {
 
     @Override
     @CircuitBreaker(name = "circuitBreakerItau")
-    @TimeLimiter(name = "timeoutItau")
     public Long execute(CreateAccountCommand cmd) {
         var transactionInfoLog = String.format("CreateAccountUseCaseImpl_" + cmd.getPersonDocument());
 
@@ -33,7 +31,7 @@ public class CreateAccountUseCaseImpl implements CreateAccountUseCase {
         var person = personService.getPerson(cmd.getPersonDocument());
         var account = buildAccount(person);
 
-        log.info("{} Account created is {}",transactionInfoLog, account);
+        log.info("{} Account created is {}", transactionInfoLog, account);
         return accountService.saveAccount(account, true).getId();
     }
 

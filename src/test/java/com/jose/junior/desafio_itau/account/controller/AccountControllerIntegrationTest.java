@@ -3,12 +3,11 @@ package com.jose.junior.desafio_itau.account.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jose.junior.desafio_itau.account.gateway.database.AccountRepository;
 import com.jose.junior.desafio_itau.account.model.database.AccountDatabase;
-import com.jose.junior.desafio_itau.account.useCase.AddBalanceUseCase;
 import com.jose.junior.desafio_itau.account.useCase.AddBalanceUseCase.AddBalanceCommand;
 import com.jose.junior.desafio_itau.account.useCase.CreateAccountUseCase.CreateAccountCommand;
-import com.jose.junior.desafio_itau.account.useCase.DebitBalanceUseCase;
 import com.jose.junior.desafio_itau.account.useCase.DebitBalanceUseCase.DebitBalanceCommand;
 import com.jose.junior.desafio_itau.account.useCase.DisableAccountUseCase.DisableAccountCommand;
+import com.jose.junior.desafio_itau.account.useCase.GetAccountUseCase.AccountDTO;
 import com.jose.junior.desafio_itau.person.gateway.database.PersonRepository;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +28,7 @@ import static com.jose.junior.desafio_itau.account.controller.AccountController.
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -161,7 +159,6 @@ public class AccountControllerIntegrationTest {
         );
     }
 
-
     @Test
     @DisplayName("Ensures that the account has been successfully activated without changing data")
     public void shouldActivateAccountWithSuccess() throws Exception {
@@ -257,7 +254,6 @@ public class AccountControllerIntegrationTest {
         );
     }
 
-
     @Test
     @DisplayName("Ensures the balance was debited to the account without changing the other information")
     public void shouldDebitBalanceToAccountWithSuccess() throws Exception {
@@ -298,6 +294,41 @@ public class AccountControllerIntegrationTest {
                 () -> assertTrue(resultDb.getActive()),
                 () -> assertEquals(0, resultDb.getBalance().compareTo(new BigDecimal("1003.97"))),
                 () -> assertEquals(resultDb.getClient().getDocument(), personDatabase.getDocument())
+        );
+    }
+
+    @Test
+    @DisplayName("Ensures that the account data returned is correct.")
+    public void shouldRRetunrAccountDateWithSuccess() throws Exception {
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(false)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+        var account = AccountDatabase.builder()
+                .balance(BigDecimal.ZERO)
+                .active(true)
+                .client(personDatabase)
+                .build();
+        accountRepository.save(account);
+
+        var resultData = mvc.perform(get(ACCOUNT_ENDPOINT.concat("/{accountOwner}"), personDatabase.getDocument()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        var accountDtoResponse = mapper.readValue(resultData, AccountDTO.class);
+
+        assertAll("teste",
+                () -> assertEquals(accountDtoResponse.getDocumentOwner(), personDatabase.getDocument())
         );
     }
 }
