@@ -24,4 +24,10 @@ public class AccountService {
                 .map(account -> account.toDomain(true))
                 .orElseThrow(() -> new AccountNotFoundException(String.format("Account with id %d not found", accountId)));
     }
+
+    public Account getAccountByDocumentOwner(String document) {
+        return repository.findByClientDocument(document)
+                .map(account -> account.toDomain(true))
+                .orElseThrow(() -> new AccountNotFoundException(String.format("Account with client document %s not found", document)));
+    }
 }
