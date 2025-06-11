@@ -33,6 +33,7 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.projectlombok:lombok")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation("io.github.resilience4j:resilience4j-spring-boot3:2.0.2")
 	testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
 	testImplementation("com.h2database:h2:2.3.232")
 	implementation ("org.flywaydb:flyway-core:9.20.0")
