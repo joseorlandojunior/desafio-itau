@@ -1,6 +1,8 @@
 package com.jose.junior.desafio_itau.account.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jose.junior.desafio_itau.account.exception.AccountNotFoundException;
+import com.jose.junior.desafio_itau.account.exception.InvalidBalanceException;
 import com.jose.junior.desafio_itau.account.gateway.database.AccountRepository;
 import com.jose.junior.desafio_itau.account.model.database.AccountDatabase;
 import com.jose.junior.desafio_itau.account.useCase.AddBalanceUseCase.AddBalanceCommand;
@@ -8,6 +10,8 @@ import com.jose.junior.desafio_itau.account.useCase.CreateAccountUseCase.CreateA
 import com.jose.junior.desafio_itau.account.useCase.DebitBalanceUseCase.DebitBalanceCommand;
 import com.jose.junior.desafio_itau.account.useCase.DisableAccountUseCase.DisableAccountCommand;
 import com.jose.junior.desafio_itau.account.useCase.GetAccountUseCase.AccountDTO;
+import com.jose.junior.desafio_itau.person.exception.ManagerNotAuthorizedException;
+import com.jose.junior.desafio_itau.person.exception.PersonNotFoundException;
 import com.jose.junior.desafio_itau.person.gateway.database.PersonRepository;
 import com.jose.junior.desafio_itau.person.model.database.PersonDatabase;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static com.jose.junior.desafio_itau.account.controller.AccountController.PATH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -50,6 +55,7 @@ public class AccountControllerIntegrationTest {
     private MockMvc mvc;
 
     private static final String ACCOUNT_ENDPOINT = PATH;
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -157,6 +163,52 @@ public class AccountControllerIntegrationTest {
                 () -> assertEquals(0, result.getBalance().compareTo(new BigDecimal("0.00"))),
                 () -> assertEquals(result.getClient().getDocument(), personDatabase.getDocument())
         );
+    }
+
+    @Test
+    @DisplayName("Ensures that you do not allow an account with a positive balance to be deactivated.")
+    public void shouldThrowInvalidBalanceExceptionWhenBalanceOfAccountIsPositive() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("Alisson Santos")
+                .manageAccounts(true)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(false)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+        var account = AccountDatabase.builder()
+                .balance(BigDecimal.valueOf(123.77))
+                .active(true)
+                .client(personDatabase)
+                .build();
+        accountRepository.save(account);
+
+        var cmd = DisableAccountCommand.builder()
+                .accountId(account.getId())
+                .build();
+
+        var result = mvc.perform(put(ACCOUNT_ENDPOINT.concat("/disable/{managerDocument}"), manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isInstanceOf(InvalidBalanceException.class);
     }
 
     @Test
@@ -299,7 +351,7 @@ public class AccountControllerIntegrationTest {
 
     @Test
     @DisplayName("Ensures that the account data returned is correct.")
-    public void shouldRRetunrAccountDateWithSuccess() throws Exception {
+    public void shouldRetunrAccountDateWithSuccess() throws Exception {
 
         var personDatabase = PersonDatabase.builder()
                 .birthDate(LocalDate.of(1985, 9, 1))
@@ -333,5 +385,96 @@ public class AccountControllerIntegrationTest {
                 () -> assertEquals(accountDtoResponse.getBalance(), BigDecimal.valueOf(2503.97)),
                 () -> assertTrue(accountDtoResponse.getActive())
         );
+    }
+
+    @Test
+    @DisplayName("Ensures that the account data returned is correct.")
+    public void shouldThrowsExceptionAccountNotFoundExceptionWhenAccoiuntNotFound() throws Exception {
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(false)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+        var resultData = mvc.perform(get(ACCOUNT_ENDPOINT.concat("/{accountOwner}"), personDatabase.getDocument()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(resultData.getResolvedException()).isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Ensures that an exception will be thrown when the manager does not have authorization..")
+    public void shouldThrowManagerNotAuthorizedExceptionWhenManagerNotAuthorized() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("Alisson Santos")
+                .manageAccounts(false)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var personDatabase = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1985, 9, 1))
+                .document("26204434071")
+                .email("joao@teste.com")
+                .fullName("João da silva")
+                .manageAccounts(false)
+                .active(false)
+                .telephone("123345567")
+                .build();
+        personRepository.save(personDatabase);
+
+        var cmd = CreateAccountCommand.builder()
+                .personDocument(personDatabase.getDocument())
+                .managerDocument(manager.getDocument())
+                .build();
+
+        var result = mvc.perform(post(ACCOUNT_ENDPOINT.concat("/{managerDocument}"), manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isUnprocessableEntity())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isInstanceOf(ManagerNotAuthorizedException.class);
+    }
+
+    @Test
+    @DisplayName("Ensures that an exception will be thrown when requesting to create an account with an unregistered person.")
+    public void shouldThrowManagerPersonNotFoundWhenPersonUnregistred() throws Exception {
+
+        var manager = PersonDatabase.builder()
+                .birthDate(LocalDate.of(1990, 2, 3))
+                .document("66721724243")
+                .email("teste@teste.com")
+                .fullName("Alisson Santos")
+                .manageAccounts(true)
+                .active(true)
+                .telephone("123345567")
+                .build();
+        personRepository.save(manager);
+
+        var cmd = CreateAccountCommand.builder()
+                .personDocument("62159175080")
+                .managerDocument(manager.getDocument())
+                .build();
+
+        var result = mvc.perform(post(ACCOUNT_ENDPOINT.concat("/{managerDocument}"), manager.getDocument())
+                        .contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(cmd)))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isInstanceOf(PersonNotFoundException.class);
     }
 }

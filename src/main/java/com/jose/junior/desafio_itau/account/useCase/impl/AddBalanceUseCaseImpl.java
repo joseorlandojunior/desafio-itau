@@ -1,5 +1,6 @@
 package com.jose.junior.desafio_itau.account.useCase.impl;
 
+import com.jose.junior.desafio_itau.account.exception.BloquedException;
 import com.jose.junior.desafio_itau.account.exception.ValueForOperationInvalidException;
 import com.jose.junior.desafio_itau.account.model.domain.Account;
 import com.jose.junior.desafio_itau.account.useCase.AddBalanceUseCase;
@@ -22,22 +23,23 @@ public class AddBalanceUseCaseImpl implements AddBalanceUseCase {
 
         log.info("{} Payload received is {}", transactionInfoLog, cmd);
 
-        var account = accountService.getAccount(cmd.getAccountId());
-        log.info("{} Account contain this data: {}", transactionInfoLog, account);
-
         if (cmd.getValueForAdd().compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValueForOperationInvalidException("The value to be added must be positive");
         }
+
+        var account = accountService.getAccount(cmd.getAccountId());
+        log.info("{} Account contain this data: {}", transactionInfoLog, account);
 
         addValue(account, cmd);
         log.info("{} Balance has been successfully added.", transactionInfoLog);
     }
 
     private void addValue(Account account, AddBalanceCommand cmd) {
-        if (cmd.getDocumentAccountOwner().equals(account.getClient().getDocument())
-                && account.getActive() == true) {
-            account.addBalance(cmd.getValueForAdd());
-            accountService.saveAccount(account, true);
+        if (!cmd.getDocumentAccountOwner().equals(account.getClient().getDocument())
+                || account.getActive() == false) {
+            throw new BloquedException("Person is not owner of this account or account is not active.");
         }
+        account.addBalance(cmd.getValueForAdd());
+        accountService.saveAccount(account, true);
     }
 }

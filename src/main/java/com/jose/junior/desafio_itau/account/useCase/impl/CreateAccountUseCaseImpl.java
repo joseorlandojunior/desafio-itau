@@ -31,7 +31,10 @@ public class CreateAccountUseCaseImpl implements CreateAccountUseCase {
         var person = personService.getPerson(cmd.getPersonDocument());
         var account = buildAccount(person);
 
+        person.assignAccount(account);
+
         log.info("{} Account created is {}", transactionInfoLog, account);
+        personService.save(person, true);
         return accountService.saveAccount(account, true).getId();
     }
 
