@@ -50,6 +50,10 @@ public class Person {
         this.active = true;
     }
 
+    public void assignAccount(Account account) {
+       this.account = account;
+    }
+
     public PersonDatabase toDatabase(boolean includeAccount) {
         return PersonDatabase.builder()
                 .id(id)
