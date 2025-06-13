@@ -39,5 +39,4 @@ public class DisableAccountUseCaseImpl implements DisableAccountUseCase {
         }
         account.disable();
     }
-
 }

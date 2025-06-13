@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class CreateFirstManagerUSeCaseImpl implements CreateFirstManagerUseCase {
+public class CreateFirstManagerUseCaseImpl implements CreateFirstManagerUseCase {
 
     private final PersonService service;
 
@@ -20,13 +20,24 @@ public class CreateFirstManagerUSeCaseImpl implements CreateFirstManagerUseCase 
 
         log.info("{} Payload received is {}", transactionInfoLog, cmd);
 
-        if (service.existsByDocument(cmd.getDocument())) {
-            throw new PersonAlreadyExistsException(String.format("Person with document %s already exists.", cmd.getDocument()));
-        }
+        verifyIfFirstManager();
+        verifyIfPersonExists(cmd.getDocument());
 
         var person = buildPerson(cmd);
         service.save(person, false);
         log.info("{} First manager is: {}", transactionInfoLog, person);
+    }
+
+    private void verifyIfPersonExists(String document) {
+        if (service.existsByDocument(document)) {
+            throw new PersonAlreadyExistsException(String.format("Person with document %s already exists.", document));
+        }
+    }
+
+    private void verifyIfFirstManager() {
+        if (service.existsManager()) {
+            throw new PersonAlreadyExistsException("There is already a registered manager");
+        }
     }
 
     private Person buildPerson(CreateFirstManagerCommand cmd) {

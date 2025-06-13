@@ -1,5 +1,6 @@
 package com.jose.junior.desafio_itau.account.useCase.impl;
 
+import com.jose.junior.desafio_itau.account.exception.BloquedException;
 import com.jose.junior.desafio_itau.account.exception.ValueForOperationInvalidException;
 import com.jose.junior.desafio_itau.account.model.domain.Account;
 import com.jose.junior.desafio_itau.account.useCase.DebitBalanceUseCase;
@@ -21,24 +22,25 @@ public class DebitBalanceUseCaseImpl implements DebitBalanceUseCase {
         var transactionInfoLog = String.format("DebitBalanceUseCaseImpl_" + cmd.getAccountId());
 
         log.info("{} Payload received is {}", transactionInfoLog, cmd);
-        var account = accountService.getAccount(cmd.getAccountId());
-        log.info("{} Account contain this data: {}", transactionInfoLog, account);
-
 
         if (cmd.getValueForDebit().compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValueForOperationInvalidException("The value to be debit is invalid.");
         }
+
+        var account = accountService.getAccount(cmd.getAccountId());
+        log.info("{} Account contain this data: {}", transactionInfoLog, account);
 
         debitValue(account, cmd);
         log.info("{} Balance has been successfully debited.", transactionInfoLog);
     }
 
     private void debitValue(Account account, DebitBalanceCommand cmd) {
-        if (cmd.getDocumentAccountOwner().equals(account.getClient().getDocument())) {
-            balanceSuficient(account, cmd.getValueForDebit());
-            account.debitBalance(cmd.getValueForDebit());
-            accountService.saveAccount(account, true);
+        if (!cmd.getDocumentAccountOwner().equals(account.getClient().getDocument())) {
+            throw new BloquedException("Person is not owner of this account.");
         }
+        balanceSuficient(account, cmd.getValueForDebit());
+        account.debitBalance(cmd.getValueForDebit());
+        accountService.saveAccount(account, true);
     }
 
     private void balanceSuficient(Account account, BigDecimal balanceForDebit) {

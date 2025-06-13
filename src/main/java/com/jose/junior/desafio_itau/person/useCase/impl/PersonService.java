@@ -40,4 +40,8 @@ public class PersonService {
             throw new ManagerNotAuthorizedException(String.format("Manager %s with insufficient resources", managerDocument));
         }
     }
+
+    public Boolean existsManager() {
+        return repository.existsByActiveAndManageAccounts(true, true);
+    }
 }
