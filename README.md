@@ -93,4 +93,6 @@ OBS: Os valores como o ip da maquina EC2 e o ssh não são reais, pois a app nã
 
 <h1> Avisos/observações gerais sobre a aplicação</h1>
 Todos os arquivos foram comitados e nenhum esta no gitignore justamente para que seja possivel executa-la sem problemas. Geralmente arquivos com senhas como os da pasta env são deixados de fora por conta de segurança. </br></br>
+
+Não foi publicada uma imagem da app no Docker-hub para não facilitar o acesso de futuros candidatos ao desafio, e por este motivo, o build é feito localmente; </br> </br> 
 Foi exposto o endpoint <code>/fist-manager</code> com o intuito de criar o primeiro gerente da aplicação quando executado em produção, e em seguida, esse endpoint pode ser removido sem ter necessidade de grande refatoração, pois o controller e implementação esta separado do restante. Isso é necessário, pois toda a app da incio com ações que exigem um gerente. 
